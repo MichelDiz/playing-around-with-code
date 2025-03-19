@@ -1,14 +1,32 @@
 {
-    "configurations": [
-      {
-        "type": "lldb",
-        "request": "launch",
-        "name": "Launch Rust Program",
-        "program": "${workspaceFolder}/target/debug/playing-around-with-rust",
-        "args": [],
-        "cwd": "${workspaceFolder}",
-        "preLaunchTask": "cargo build",
-        "sourceLanguages": ["rust"],
-      }
-    ]
-  }
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Rust Program",
+      "program": "${workspaceFolder}/target/debug/playing-around-with-rust",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "cargo build",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "type": "go",
+      "request": "launch",
+      "name": "Go Client",
+      "mode": "debug",
+      "program": "${workspaceFolder}/client/main.go",
+      "cwd": "${workspaceFolder}/client"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Server and Client",
+      "configurations": [
+        "Rust Program",
+        "Go Client"
+      ]
+    }
+  ]
+}
