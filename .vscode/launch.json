@@ -1,0 +1,14 @@
+{
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Launch Rust Program",
+        "program": "${workspaceFolder}/target/debug/playing-around-with-rust",
+        "args": [],
+        "cwd": "${workspaceFolder}",
+        "preLaunchTask": "cargo build",
+        "sourceLanguages": ["rust"],
+      }
+    ]
+  }
