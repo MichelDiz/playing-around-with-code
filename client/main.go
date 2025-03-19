@@ -10,13 +10,13 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Configurações globais
+// Global configurations
 const (
 	serverURL    = "ws://127.0.0.1:3030/ws"
 	clientName   = "Microservice1"
-	retryDelay   = 5 * time.Second // Tempo de espera antes de tentar reconectar
-	pingInterval = 8 * time.Second // Tempo entre cada ping
-	cmdInterval  = 8 * time.Second // Tempo entre cada comando aleatório
+	retryDelay   = 5 * time.Second // Wait time before trying to reconnect
+	pingInterval = 8 * time.Second // Time between each ping
+	cmdInterval  = 8 * time.Second // Time between each random command
 )
 
 func main() {
@@ -24,39 +24,39 @@ func main() {
 	signal.Notify(interrupt, os.Interrupt)
 
 	for {
-		fmt.Println("Tentando conectar ao servidor...")
+		fmt.Println("Attempting to connect to the server...")
 		conn, err := connectWebSocket()
 		if err != nil {
-			fmt.Println("Falha ao conectar. Tentando novamente em", retryDelay)
+			fmt.Println("Failed to connect. Retrying in", retryDelay)
 			time.Sleep(retryDelay)
 			continue
 		}
 
-		// Se conectou com sucesso, começa a rotina de mensagens
+		// If connected successfully, start the message routine
 		if startClient(conn, interrupt) {
-			fmt.Println("Tentando reconectar...")
-			time.Sleep(retryDelay) // Aguarda antes de tentar reconectar
+			fmt.Println("Attempting to reconnect...")
+			time.Sleep(retryDelay) // Wait before trying to reconnect
 		} else {
 			break
 		}
 	}
 
-	fmt.Println("Cliente encerrado.")
+	fmt.Println("Client terminated.")
 }
 
-// Conecta ao WebSocket e retorna a conexão ativa
+// Connects to the WebSocket and returns the active connection
 func connectWebSocket() (*websocket.Conn, error) {
 	conn, _, err := websocket.DefaultDialer.Dial(serverURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("Conectado ao servidor WebSocket!")
+	fmt.Println("Connected to the WebSocket server!")
 
-	// Enviar nome do cliente após a conexão
+	// Send client name after connecting
 	err = conn.WriteMessage(websocket.TextMessage, []byte("name:"+clientName))
 	if err != nil {
-		fmt.Println("Erro ao enviar nome:", err)
+		fmt.Println("Error sending name:", err)
 		conn.Close()
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func connectWebSocket() (*websocket.Conn, error) {
 	return conn, nil
 }
 
-// Gerencia a comunicação com o servidor WebSocket
+// Manages communication with the WebSocket server
 func startClient(conn *websocket.Conn, interrupt chan os.Signal) bool {
 	defer conn.Close()
 
@@ -74,14 +74,14 @@ func startClient(conn *websocket.Conn, interrupt chan os.Signal) bool {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				fmt.Println("Conexão perdida:", err)
+				fmt.Println("Connection lost:", err)
 				return
 			}
-			fmt.Printf("Mensagem recebida: %s\n", message)
+			fmt.Printf("Message received: %s\n", message)
 		}
 	}()
 
-	// Configura os timers para ping e comandos aleatórios
+	// Set up timers for ping and random commands
 	pingTicker := time.NewTicker(pingInterval)
 	defer pingTicker.Stop()
 	cmdTicker := time.NewTicker(cmdInterval)
@@ -90,31 +90,31 @@ func startClient(conn *websocket.Conn, interrupt chan os.Signal) bool {
 	for {
 		select {
 		case <-done:
-			return true // Conexão foi fechada, tentar reconectar
+			return true // Connection was closed, try to reconnect
 
 		case <-pingTicker.C:
-			fmt.Println("Enviando ping para o servidor")
+			fmt.Println("Sending ping to the server")
 			err := conn.WriteMessage(websocket.TextMessage, []byte("ping"))
 			if err != nil {
-				fmt.Println("Erro ao enviar ping:", err)
+				fmt.Println("Error sending ping:", err)
 				return true
 			}
 
 		case <-cmdTicker.C:
 			commands := []string{"cmd:get_time", "cmd:random_num"}
 			cmd := commands[rand.Intn(len(commands))]
-			fmt.Printf("Enviando comando: %s\n", cmd)
+			fmt.Printf("Sending command: %s\n", cmd)
 			err := conn.WriteMessage(websocket.TextMessage, []byte(cmd))
 			if err != nil {
-				fmt.Println("Erro ao enviar comando:", err)
+				fmt.Println("Error sending command:", err)
 				return true
 			}
 
 		case <-interrupt:
-			fmt.Println("\nEncerrando conexão...")
+			fmt.Println("\nClosing connection...")
 			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				fmt.Println("Erro ao fechar conexão:", err)
+				fmt.Println("Error closing connection:", err)
 			}
 			return false
 		}
