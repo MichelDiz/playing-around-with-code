@@ -1,0 +1,8 @@
+/solution/rust/**/target
+.mypy_cache
+__pycache__
+.DS_Store
+*.bk
+*.gobk
+**/badgerdb/*
+**/mod/*
